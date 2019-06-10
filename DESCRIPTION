@@ -1,0 +1,22 @@
+Package: blmatest
+Type: Package
+Title: Tests blma
+Version: 0.1.0
+Author: John Ormerod, Mark Greenaway
+Maintainer: Mark Greenaway <markg@maths.usyd.edu.au>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports: Rcpp (>= 0.12.18),
+         BAS,
+         gsl,
+         appell,
+         pracma,
+         data.table,
+         parallel,
+         ncvreg,
+         blma,
+         BMS
+LinkingTo: Rcpp
