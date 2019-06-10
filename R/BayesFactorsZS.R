@@ -100,14 +100,14 @@ log.U.fun.Laplace <- function(a,b,z)
 	#	x = EPS
 	#}
 	
-	cat("x=",x,"\n")
+	#cat("x=",x,"\n")
 	
 	h = -(a - 1)/(x^2) - (b - a - 1)/((1 + x)^2)
 	s2 = (-1/h)
 	
-	cat("s2=",s2,"\n")
-	cat("a=",a,"\n")
-	cat("b - a - 1=",b - a - 1,"\n")
+	#cat("s2=",s2,"\n")
+	#cat("a=",a,"\n")
+	#cat("b - a - 1=",b - a - 1,"\n")
 	
 	log.f = (a - 1)*log(x) + (b - a - 1)*log(1 + x) - z*x
 	
@@ -119,8 +119,8 @@ log.U.fun.Laplace <- function(a,b,z)
 		plot(xg,exp(log.fg),type="l")
 		points(x,exp(log.f))
 		
-		print(x)
-		print(xg[which.max(log.fg)])
+		#print(x)
+		#print(xg[which.max(log.fg)])
 	}
 
 	val = log.f + 0.5*log(2*pi*s2)  - lgamma(a) 
@@ -193,41 +193,44 @@ solve.cubic <- function(a,b,c) {
 	}        
 }
 
-log.BF.ZS.Laplace <- function(R2,n,p)
+log.BF.ZS.Laplace <- function(vR2,n,vp)
 {
-	a = 0.5*(p - 1)
-	b = 0.5*(n - p - 1)
-	c = 0.5*(n - 1)
-	d = 1/(1- R2)
-	e = -0.5*n
+	M <- length(vR2) 
 	
-	ed = e*d
-	
-	A = (a*d + b*d - c*d + e + e*d)/ed
-	B = (a + a*d + b - c*d + e)/ed
-	C = a/ed
-	
-	x = solve.cubic(A,B,C)
-	#print(res)
-	
-	#x = seq(0,0.01,,1000)
-	
-	log.f = a*log(x) + b*log(1+x) - c*log(1+d*x) + e*x
-	
-	#g = a/x + b/(1 + x) - c*d/(1 + d*x) + e
-	
-	h = -a/(x*x) - b/((1+x)^2) + c*d*d/((1 + d*x)^2)
-	
-	s2 = -1/h
-	s  = sqrt(s2)
-	
-	#par(mfrow=c(1,2))
-	#plot(x,f,type="l")
-	#plot(x,g,type="l")
-
-	val = log.f + 0.5*log(2*pi*s2) - c*log(1 - R2) + 0.5*log(n/2/pi) # + pnorm(x/s,log=TRUE)
-	
-	return(val)
+	vals <- c()
+	for (i in 1:M) {
+		
+		a = 0.5*(vp[i] - 1)
+		b = 0.5*(n - vp[i] - 1)
+		c = 0.5*(n - 1)
+		d = 1/(1- vR2[i])
+		e = -0.5*n
+		
+		ed = e*d
+		
+		A = (a*d + b*d - c*d + e + e*d)/ed
+		B = (a + a*d + b - c*d + e)/ed
+		C = a/ed
+		
+		x = solve.cubic(A,B,C)
+		
+		#print(res)
+		#x = seq(0,0.01,,1000)
+		
+		log.f = a*log(x) + b*log(1+x) - c*log(1+d*x) + e*x
+		
+		#g = a/x + b/(1 + x) - c*d/(1 + d*x) + e	
+		h = -a/(x*x) - b/((1+x)^2) + c*d*d/((1 + d*x)^2)
+		
+		s2 = -1/h
+		s  = sqrt(s2)
+		
+	 
+		val = log.f + 0.5*log(2*pi*s2) - c*log(1 - vR2[i]) + 0.5*log(n/2/pi)  
+		vals[i] <- val
+	}
+		
+	return(vals)
 }
 
 ####################################################################################################
@@ -312,9 +315,10 @@ log.BF.ZellnerSiow.trap  = function(R2, n, p, N = 1.0E5, R=8000)
 
 ####################################################################################################
 
-log.BF.ZellnerSiow.quad  = function(vR2, n, vp, N = 1000)
+log.BF.ZellnerSiow.quad  = function(vR2, n, vp, quadrule=gaussLaguerre(1000, a = 0))
 {
-	q = gaussLaguerre(N, a = 0)
+	q = quadrule
+	N = length(q$x)
 	vx = q$x
 	vw = q$w
 	
@@ -367,21 +371,21 @@ log.BF.ZellnerSiow.integer  = function(R2, n, p, method=c("Exact","Laplace","Qua
 		z = 0.5*n*sigma2
 		
 		log.val = (b - 1)*log(sigma2)
-		cat(k,1,log.val,"\n")
+		#cat(k,1,log.val,"\n")
 		log.val = log.val + lchoose(N,k)
-		cat(k,2,log.val,"\n")		
+		#cat(k,2,log.val,"\n")		
 		log.val = log.val + lgamma(a) 
-		cat(k,3,log.val,"\n")
-		cat(a,b,z,method,"\n")
+		#cat(k,3,log.val,"\n")
+		#cat(a,b,z,method,"\n")
 		log.val = log.val + log.U.fun(a,b,z,method,quadrule) 
-		cat(k,4,log.val,"\n")
+		#cat(k,4,log.val,"\n")
 		
 		log.vals[k+1] = log.val
 		
 		#cat(k,5,val,log.val,valU,"\n")
 	}
 	
-	print(log.vals)
+	#print(log.vals)
 	
 	M = max(log.vals)
 	val = M + log(sum(exp(log.vals - M))) - 0.5*log(pi)  +  0.5*log(n/2)

@@ -1,4 +1,9 @@
 
+library(BAS)
+library(gsl)
+library(appell)
+library(pracma)
+
 ####################################################################################################
 
 # Naive approach using direct call of appellf1
@@ -9,17 +14,26 @@ log.BF.g.on.n.naive <- function(vR2, n, vp, flag)
   vlogBF <- rep(0, length(vR2))
   errors = c()
   for (i in 1:length(vR2)) {
-    vlogBF[i] <- log(a - 2) - log(n) - log(vp[i] + a - 2)
-    res = try({ 
-    	appellf1(1.0, 0.5*a, 0.5*(n-1), 0.5*(vp[i]+a), (1-1/n), vR2[i], debug=TRUE, userflag = flag, hyp2f1 = "michel.stoitsov")
-    },silent=TRUE)
-  	print(res)
-  	
-  	val = Re(res$val)
-  	
-  	errors[i] = (val<0)|(is.nan(val))
-  	
-  	vlogBF[i] <- vlogBF[i] + log(val)
+  
+  	if (vp[i]==0) {
+  		vlogBF[i] <- 0
+  		errors[i] <- FALSE
+  	} else {
+	    vlogBF[i] <- log(a - 2) - log(n) - log(vp[i] + a - 2)
+	    res = try({ 
+	    	appellf1(1.0, 0.5*a, 0.5*(n-1), 0.5*(vp[i]+a), (1-1/n), vR2[i], debug=FALSE, userflag = flag, hyp2f1 = "michel.stoitsov")
+	    },silent=TRUE)
+	  	#print(res)
+	  	
+	  	if (class(res)=="try-error") {
+	  		vlogBF[i] <- NA
+	  		errors[i] <- TRUE
+	  	} else {
+	  		val = Re(res$val)
+	  		errors[i] = (val<0)|(is.nan(val))
+	  		vlogBF[i] <- vlogBF[i] + log(val)
+	  	}
+	  }
   }
   vlogBF[vR2 < 1.0E-12] <- 0
   return(list(vals=vlogBF,errors=errors))
@@ -48,6 +62,26 @@ log.BF.g.on.n.quad <- function(R2, n, p, a, quadrule)
 	log.f.til = log.f - log.f.star
 	val = log.f.star + log(sum(quadrule$w*exp(log.f.til)))	
 	return(val)
+}
+
+
+log.BF.g.on.n.quad.vec <- function(vR2, n, vp, a, quadrule=gaussLegendre(n=1000,a=0,b=1)) 
+{
+   	vu <- quadrule$x
+	vw <- quadrule$w
+
+	vals = 0
+	vals = vals + log(a - 2)
+	vals = vals - log(2*n)
+	vals = vals + 0.5*(vp + a - 4)%*%t(log(1 - vu))
+	vals = vals - matrix(0.5*a,length(vR2),1)%*%t(log(1 - vu*(1 - 1/n)))
+	vals = vals - 0.5*(n - 1)*log(1 - vR2%*%t(vu))
+	
+	log.f.star = max(vals)
+	log.f.til = vals - log.f.star
+	logBF = log.f.star + log( exp(log.f.til)%*%vw )	
+	
+	return(logBF)
 }
 
 ####################################################################################################
