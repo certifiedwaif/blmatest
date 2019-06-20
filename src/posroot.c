@@ -1,4 +1,5 @@
 #include <R.h>
+#include <Rmath.h>
 #include <math.h>
 
 #include "posroot.h"
